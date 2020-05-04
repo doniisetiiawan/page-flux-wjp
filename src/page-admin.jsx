@@ -1,89 +1,48 @@
 import React, { Component } from 'react';
-import {
-  CSSTransition,
-  TransitionGroup,
-} from 'react-transition-group';
-import Page from './page';
-import Backend from './backend';
+import PageStore from './page-store';
+import PageDispatcher from './page-dispatcher';
 
 class PageAdmin extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      pages: [],
-    };
-
-    this.props.backend.on('update', (pages) => this.setState({ pages }));
+    this.state = PageStore.getState();
   }
 
-  componentDidMount() {
-    this.setState({
-      pages: this.props.backend.all(),
-    });
+  componentDidMount = () => {
+    PageStore.on('change', this.onChange);
   }
 
-  onInsert = () => {
-    this.props.backend.insert();
+  componentWillUnmount = () => {
+    PageStore.removeListener('change', this.onChange);
   };
 
-  onUpdate = (id, field, value) => {
-    this.props.backend.update(id, field, value);
-  };
-
-  onDelete = (id) => {
-    this.props.backend.delete(id);
+  onChange = () => {
+    this.setState(PageStore.getState());
   };
 
   render() {
-    const contentClassNames = [
-      'mdl-layout__content',
-      'mdl-color--grey-100',
-    ].join(' ');
-
-    const addButtonClassNames = [
-      'mdl-button',
-      'mdl-js-button',
-      'mdl-button--fab',
-      'mdl-js-ripple-effect',
-      'mdl-button--colored',
-    ].join(' ');
-
-    const itemStyle = this.props.itemStyle || {
-      minHeight: '40px',
-      lineHeight: '40px',
-      fontSize: '18px',
-      fontFamily: 'Helvetica',
-    };
-
     return (
-      <div className={contentClassNames}>
-        <button
-          type="button"
-          onClick={this.onInsert}
-          className={addButtonClassNames}
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+
+            PageDispatcher.dispatch({
+              action: 'ADD_PAGE',
+            });
+          }}
         >
-          <i className="material-icons">add</i>
-        </button>
+          add page
+        </a>
         <ol>
-          <TransitionGroup>
-            {this.state.pages
-              ? this.state.pages.map((page) => (
-                <CSSTransition
-                  key={page.id}
-                  timeout={500}
-                  classNames="my-node"
-                >
-                  <Page
-                    {...page}
-                    key={page.id}
-                    onUpdate={this.onUpdate}
-                    onDelete={this.onDelete}
-                  />
-                </CSSTransition>
-              ))
-              : 'Undefined...'}
-          </TransitionGroup>
+          {this.state.pages.map((page) => (
+            <li key={page.id}>
+              {page.title}
+            </li>
+          ))}
         </ol>
       </div>
     );
@@ -91,15 +50,3 @@ class PageAdmin extends Component {
 }
 
 export default PageAdmin;
-
-PageAdmin.propTypes = {
-  // eslint-disable-next-line no-unused-vars,react/require-default-props
-  backend(props, propName, componentName) {
-    if (props.backend instanceof Backend) {
-      return;
-    }
-    return new Error(
-      'Required prop `backend` is not a `Backend`.',
-    );
-  },
-};

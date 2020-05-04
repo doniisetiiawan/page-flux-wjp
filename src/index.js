@@ -1,70 +1,27 @@
 /* eslint-disable react/jsx-filename-extension */
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-} from 'react-router-dom';
 import './index.css';
 import './example.css';
-import { createBrowserHistory } from 'history';
 import App from './page-admin';
-import Backend from './backend';
+import PageStore from './page-store';
 import * as serviceWorker from './serviceWorker';
 
-const history = createBrowserHistory();
+PageStore.on('change', () => {
+  console.log('on change: ', PageStore.getState());
+});
 
-const backend = new Backend();
+// console.log('all pages: ', PageStore.getState());
 
-const Nav = (props) => (
-  <ol className="nav">
-    {props.pages.map((page) => (
-      <li>
-        <Link to={`pages/${page.id}`} replace>
-          {page.title}
-        </Link>
-      </li>
-    ))}
-  </ol>
-);
+// PageDispatcher.dispatch({
+//   action: 'ADD_PAGE',
+// });
 
-const StaticPage = (props) => {
-  const id = props.match.params.page || 1;
-
-  const pages = backend
-    .all()
-    .filter((page) => page.id == id);
-
-  if (pages.length < 1) {
-    return <div>not found</div>;
-  }
-
-  return (
-    <div className="page">
-      <h1>{pages[0].title}</h1>
-      {pages[0].body}
-      <Link to="/"> Back</Link>
-    </div>
-  );
-};
+console.log('all pages: ', PageStore.getState());
 
 ReactDOM.render(
   <React.StrictMode>
-    <Router history={history}>
-      <Switch>
-        <Route path="/" exact>
-          <Nav pages={backend.all()} />
-          <App backend={backend} />
-        </Route>
-        <Route
-          path="/pages/:page"
-          render={(props) => (<StaticPage {...props} backend={backend} />
-          )}
-        />
-      </Switch>
-    </Router>
+    <App />
   </React.StrictMode>,
   document.getElementById('root'),
 );
